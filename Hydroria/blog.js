@@ -2,16 +2,16 @@
 
 const blogData = [
   {
-    title: "Server Launch Announcement",
-    author: "Skyss0fly",
+    title: "Website Live Preview 2 Launched",
+    author: "skyss0fly",
     date: "2025-06-06",
-    content: "We're excited to announce the launch of Hydroria, a new aquatic-themed PvP and Factions server with plot support. Dive in today!"
+    content: "We're excited to announce the launch of the seconds live preview of the website!"
   },
   {
-    title: "Patch Notes - v1.0.1",
-    author: "AdminTeam",
-    date: "2025-06-05",
-    content: "Fixed some early bugs and improved underwater faction mechanics. Thanks for all your feedback!"
+    title: "Test Blog",
+    author: "skyss0fly",
+    date: "2025-06-06",
+    content: "Test!"
   }
 ];
 
