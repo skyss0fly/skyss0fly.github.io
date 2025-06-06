@@ -1,6 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
   const blogData = [
     {
+      title: "Website Rename Launch",
+      author: "skyss0fly",
+      date: "2025-06-07",
+      tags: ["announcement", "release"],
+      content: "Hello all, Great News, we have come up with a name. Aquaris Network! So this Websie has been Completely changed for the new name and theme" 
+    },
+    {
       title: "Website Live Preview 2 Launched",
       author: "skyss0fly",
       date: "2025-06-06",
