@@ -36,7 +36,37 @@ p {
   line-height: 1.6;
   color: #e0f7ff;
 }
+.blog-section {
+  max-width: 800px;
+  margin: 3rem auto;
+  padding: 1rem;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(5, 176, 255, 0.3);
+}
 
+.blog-post {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.blog-post h3 {
+  color: #05b0ff;
+  margin-bottom: 0.5rem;
+}
+
+.blog-post .meta {
+  font-size: 0.9rem;
+  color: #cccccc;
+  margin-bottom: 0.75rem;
+}
+
+.blog-post p {
+  color: #e0f7ff;
+  line-height: 1.6;
+}
 /* Buttons (optional styling) */
 button {
   background-color: #05b0ff;
@@ -48,3 +78,4 @@ button {
   font-size: 1rem;
   cursor: pointer;
   transition: background
+}
