@@ -71,4 +71,14 @@ function renderPosts() {
 
     if (fullContent.length > 150) {
       blogEl.querySelector(".read-more-btn").addEventListener("click", (e) => {
-        const contentEl = blogEl.querySelector(".blog
+        const contentEl = blogEl.querySelector(".blog-content");
+        contentEl.textContent = fullContent;
+        e.target.remove(); // Remove "Read More" button
+      });
+    }
+
+    blogContainer.appendChild(blogEl);
+  });
+}
+
+renderPosts();
