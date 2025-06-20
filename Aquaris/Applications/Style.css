@@ -7,6 +7,19 @@ body {
   justify-content: center;
   padding-top: 60px; /* make room for the fixed banner */
 }
+.site-header {
+  text-align: center;
+  padding: 30px 0;
+  background: transparent; /* or use a color/image here */
+}
+
+.logo {
+  max-width: 300px;
+  width: 100%;
+  height: auto;
+  opacity: 0.95; /* softens it slightly, adjust as needed */
+  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.2)); /* optional glow/shadow */
+}
 
 .container {
   background-color: white;
