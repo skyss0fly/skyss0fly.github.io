@@ -7,33 +7,20 @@ body {
   justify-content: center;
   padding-top: 60px; /* make room for the fixed banner */
 }
-.logo-container {
+.logo-banner {
   text-align: center;
   margin-top: 20px;
-  margin-bottom: 10px;
   background: transparent;
 }
 
-.logo-container img {
-  max-width: 250px;
+.logo-banner img {
+  max-width: 280px;
   height: auto;
   opacity: 0.95;
-  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.3));
+  mix-blend-mode: lighten; /* or try 'screen' or 'overlay' for cool effects */
+  filter: drop-shadow(0 0 12px rgba(0, 160, 255, 0.4));
 }
 
-.site-header {
-  text-align: center;
-  padding: 30px 0;
-  background: transparent; /* or use a color/image here */
-}
-
-.logo {
-  max-width: 300px;
-  width: 100%;
-  height: auto;
-  opacity: 0.95; /* softens it slightly, adjust as needed */
-  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.2)); /* optional glow/shadow */
-}
 
 .container {
   background-color: white;
