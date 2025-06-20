@@ -6,13 +6,13 @@
 </head>
 <body>
   <div id="banner" class="banner" style="display: none;">
-    This Application is closed. Closed on 2oth July 2025.
+    This Application is closed. Closed on 20th July 2025.
   </div>
 
   <div class="container">
     <h1>Fill in the following Boxes for your Application</h1>
     <form id="surveyForm">
-      <label>Discord username and minecraft Username:</label>
+      <label>Discord username and Minecraft Username:</label>
       <input type="text" name="name" required>
 
       <label>Do you have Only Java, Only Bedrock Or Both?</label>
@@ -20,31 +20,24 @@
 
       <label>Tell Us About yourself:</label>
       <input type="text" name="about" required>
-<label>Why Would you Like the become an Architect?</label>
+
+      <label>Why Would you Like to Become an Architect?</label>
       <input type="text" name="why" required>
-<label>Any Screenshots of builds?</label>
-<select id="screenshotOption" onchange="toggleInput()">
-  <option value="">--Please choose--</option>
-  <option value="yes">Yes (Upload screenshot)</option>
-  <option value="no">No</option>
-</select>
 
-<div id="fileUpload" style="display:none;">
-  <input type="file" name="screenshots" accept="image/*">
-</div>
+      <label>Any Screenshots of builds?</label>
+      <select id="screenshotOption" onchange="toggleInput()">
+        <option value="">--Please choose--</option>
+        <option value="yes">Yes (Upload screenshot)</option>
+        <option value="no">No</option>
+      </select>
 
-<div id="textInput" style="display:none;">
-  <input type="text" name="screenshots" value="No" readonly>
-</div>
+      <div id="fileUpload" style="display:none;">
+        <input type="file" id="screenshotFile" name="screenshotFile" accept="image/*">
+      </div>
 
-<script>
-function toggleInput() {
-  const option = document.getElementById('screenshotOption').value;
-  document.getElementById('fileUpload').style.display = option === 'yes' ? 'block' : 'none';
-  document.getElementById('textInput').style.display = option === 'no' ? 'block' : 'none';
-}
-</script>
-
+      <div id="textInput" style="display:none;">
+        <input type="text" name="screenshots" value="No" readonly>
+      </div>
 
       <button type="submit">Submit</button>
     </form>
@@ -53,40 +46,58 @@ function toggleInput() {
   </div>
 
   <script>
-    // Set the close date (YYYY-MM-DD)
     const closeDate = new Date("2025-07-20");
     const now = new Date();
 
     if (now >= closeDate) {
       document.getElementById("banner").style.display = "block";
-
       const formElements = document.getElementById("surveyForm").elements;
       for (let element of formElements) {
         element.disabled = true;
       }
     }
 
-    // OPTIONAL: Discord webhook sending (only runs if form is active)
+    function toggleInput() {
+      const option = document.getElementById('screenshotOption').value;
+      document.getElementById('fileUpload').style.display = option === 'yes' ? 'block' : 'none';
+      document.getElementById('textInput').style.display = option === 'no' ? 'block' : 'none';
+    }
+
     document.getElementById("surveyForm").onsubmit = async (e) => {
       e.preventDefault();
-      const formData = new FormData(e.target);
-      const data = Object.fromEntries(formData.entries());
+      const form = e.target;
+      const formData = new FormData(form);
 
-      const content = `**New Architect Submission**\n
-**Usernames:** ${data.name}
-**What Platforms do they have:** ${data.type}
-**A bit about them:** ${data.about}
-**Screenshots (if None, text is NO)** ${data.screenshots}
-**Why they would like to become Architect:** ${data.why}`;
+      const hasScreenshot = document.getElementById('screenshotOption').value === 'yes';
+      const screenshotFile = document.getElementById('screenshotFile').files[0];
 
-      await fetch("https://discordapp.com/api/webhooks/1385594655445614703/tjeKdtzM7yhX99gvULVnYpZ67MHB3M8kJiXSaYaxdCbr8N-qn3eck_Qog4IuIqRIEqiu", {
+      const content = `**New Architect Submission**\n` +
+        `**Usernames:** ${formData.get("name")}\n` +
+        `**What Platforms do they have:** ${formData.get("type")}\n` +
+        `**A bit about them:** ${formData.get("about")}\n` +
+        `**Why they would like to become Architect:** ${formData.get("why")}\n` +
+        `**Screenshots:** ${hasScreenshot ? "(attached below)" : "No"}`;
+
+      const payload = {
+        content
+      };
+
+      const webhookURL = "https://discordapp.com/api/webhooks/1385594655445614703/tjeKdtzM7yhX99gvULVnYpZ67MHB3M8kJiXSaYaxdCbr8N-qn3eck_Qog4IuIqRIEqiu"; // Replace with your actual webhook URL
+      const submission = new FormData();
+      submission.append("payload_json", JSON.stringify(payload));
+
+      if (hasScreenshot && screenshotFile) {
+        submission.append("file", screenshotFile);
+      }
+
+      await fetch(webhookURL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content })
+        body: submission
       });
 
       document.getElementById("message").innerText = "Thanks for submitting!";
-      e.target.reset();
+      form.reset();
+      toggleInput(); // Hide inputs again after reset
     };
   </script>
 </body>
