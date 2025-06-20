@@ -23,22 +23,6 @@
 
       <label>Why Would you Like to Become an Architect?</label>
       <input type="text" name="why" required>
-
-      <label>Any Screenshots of builds?</label>
-      <select id="screenshotOption" onchange="toggleInput()">
-        <option value="">--Please choose--</option>
-        <option value="yes">Yes (Upload screenshot)</option>
-        <option value="no">No</option>
-      </select>
-
-      <div id="fileUpload" style="display:none;">
-        <input type="file" id="screenshotFile" name="file" accept="image/*">
-      </div>
-
-      <div id="textInput" style="display:none;">
-        <input type="text" name="screenshots" value="No" readonly>
-      </div>
-
       <button type="submit">Submit</button>
     </form>
 
@@ -57,19 +41,11 @@
       }
     }
 
-    function toggleInput() {
-      const option = document.getElementById('screenshotOption').value;
-      document.getElementById('fileUpload').style.display = option === 'yes' ? 'block' : 'none';
-      document.getElementById('textInput').style.display = option === 'no' ? 'block' : 'none';
-    }
 
     document.getElementById("surveyForm").onsubmit = async (e) => {
       e.preventDefault();
       const form = e.target;
       const formData = new FormData(form);
-
-      const hasScreenshot = document.getElementById('screenshotOption').value === 'yes';
-      const screenshotFile = document.getElementById('screenshotFile')?.files[0];
 
       const message = {
         content:
@@ -78,14 +54,11 @@
           `**What Platforms do they have:** ${formData.get("type")}\n` +
           `**A bit about them:** ${formData.get("about")}\n` +
           `**Why they would like to become Architect:** ${formData.get("why")}\n` +
-          `**Screenshots:** ${hasScreenshot && screenshotFile ? "(attached below)" : "No"}`
+          
       };
 
       const submission = new FormData();
       submission.append("payload_json", JSON.stringify(message));
-      if (hasScreenshot && screenshotFile) {
-        submission.append("file", screenshotFile);
-      }
 
       try {
         const res = await fetch("https://discordapp.com/api/webhooks/1385594655445614703/tjeKdtzM7yhX99gvULVnYpZ67MHB3M8kJiXSaYaxdCbr8N-qn3eck_Qog4IuIqRIEqiu", {
