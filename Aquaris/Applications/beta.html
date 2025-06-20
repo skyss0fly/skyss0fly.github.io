@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Beta Access Application</title>
+  <link rel="stylesheet" href="Style.css">
+</head>
+<body>
+  <div id="banner" class="banner" style="display: none;">
+    This Application is closed. Closed on 20th July 2025.
+  </div>
+
+  <div class="container">
+    <h1>Fill in the following Boxes for your Application</h1>
+    <form id="surveyForm">
+      <label>Discord username and Minecraft Username:</label>
+      <input type="text" name="name" required>
+
+      <label>Do you have Only Java, Only Bedrock Or Both?</label>
+      <input type="text" name="type" required>
+
+      <label>Tell Us About yourself:</label>
+      <input type="text" name="about" required>
+
+      <label>Why Would you Like to have Early access to the server?</label>
+      <input type="text" name="why" required>
+      <button type="submit">Submit</button>
+    </form>
+
+    <div id="message"></div>
+  </div>
+
+  <script>
+    const closeDate = new Date("2025-07-20");
+    const now = new Date();
+
+    if (now >= closeDate) {
+      document.getElementById("banner").style.display = "block";
+      const formElements = document.getElementById("surveyForm").elements;
+      for (let element of formElements) {
+        element.disabled = true;
+      }
+    }
+
+
+    document.getElementById("surveyForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+
+      const message = {
+        content:
+          `**New beta access Submission**\n` +
+          `**Usernames:** ${formData.get("name")}\n` +
+          `**What Platforms do they have:** ${formData.get("type")}\n` +
+          `**A bit about them:** ${formData.get("about")}\n` +
+          `**Why they would like to have beta access:** ${formData.get("why")}\n` +
+          
+      };
+
+      const submission = new FormData();
+      submission.append("payload_json", JSON.stringify(message));
+
+      try {
+        const res = await fetch("https://discordapp.com/api/webhooks/1385604763105624214/jEwwtlxItsVHbqc42iYe7xN9ZpXfr2oU3E2LyZQISDME0SfjNPelSV1_brInn_oKo3Qy", {
+          method: "POST",
+          body: submission
+        });
+
+        if (!res.ok) throw
