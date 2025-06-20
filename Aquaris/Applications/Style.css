@@ -7,6 +7,20 @@ body {
   justify-content: center;
   padding-top: 60px; /* make room for the fixed banner */
 }
+.logo-container {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  background: transparent;
+}
+
+.logo-container img {
+  max-width: 250px;
+  height: auto;
+  opacity: 0.95;
+  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.3));
+}
+
 .site-header {
   text-align: center;
   padding: 30px 0;
