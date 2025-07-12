@@ -27,11 +27,11 @@ main {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-/* AQUARIS SIDE TAB BUTTON */
+/* Desktop Side Tab */
 .aquaris-button {
     position: fixed;
     top: 50%;
-    right: -40px; /* partially hidden off-screen */
+    right: -40px;
     transform: rotate(-90deg) translateY(-50%);
     transform-origin: right center;
     background-color: #4CAF50;
@@ -45,6 +45,26 @@ main {
     transition: right 0.3s ease;
 }
 
+/* Slide in on hover (desktop only) */
 .aquaris-button:hover {
     right: 0;
+}
+
+/* Mobile fix: reposition button to bottom center */
+@media screen and (max-width: 600px) {
+    .aquaris-button {
+        position: fixed;
+        bottom: 20px;
+        right: 50%;
+        transform: translateX(50%) rotate(0);
+        border-radius: 8px;
+        top: auto;
+        background-color: #4CAF50;
+        padding: 12px 24px;
+        font-size: 16px;
+    }
+
+    .aquaris-button:hover {
+        right: 50%; /* No hover slide needed on mobile */
+    }
 }
