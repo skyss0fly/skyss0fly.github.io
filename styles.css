@@ -1,4 +1,4 @@
-/* Global styles */
+/* Base page styling */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -28,45 +28,39 @@ main {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Aquaris Button (Default - Desktop) */
+/* Default Aquaris Button (mobile style) */
 .aquaris-button {
     position: fixed;
-    top: 50%;
-    right: -40px;
-    transform: rotate(-90deg) translateY(-50%);
-    transform-origin: right center;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
     background-color: #4CAF50;
     color: white;
-    padding: 10px 20px;
+    padding: 12px 24px;
     text-decoration: none;
-    border-radius: 8px 8px 0 0;
+    border-radius: 8px;
     font-weight: bold;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     z-index: 999;
-    transition: right 0.3s ease;
+    font-size: 16px;
+    white-space: nowrap;
 }
 
-/* Hover animation (Desktop only) */
-.aquaris-button:hover {
-    right: 0;
-}
-
-/* RESPONSIVE: Mobile (Under 768px screen width) */
-@media only screen and (max-width: 768px) {
+/* Desktop override (769px and up) */
+@media screen and (min-width: 769px) {
     .aquaris-button {
-        transform: none;
-        top: auto;
-        right: auto;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        border-radius: 8px;
-        padding: 12px 24px;
-        font-size: 16px;
-        white-space: nowrap;
+        top: 50%;
+        bottom: auto;
+        left: auto;
+        right: -40px;
+        transform: rotate(-90deg) translateY(-50%);
+        transform-origin: right center;
+        border-radius: 8px 8px 0 0;
+        padding: 10px 20px;
+        font-size: 14px;
     }
 
     .aquaris-button:hover {
-        right: auto;
+        right: 0;
     }
 }
