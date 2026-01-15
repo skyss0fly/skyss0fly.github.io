@@ -1,0 +1,251 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Server Launch Countdown</title>  <!-- Fonts -->  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">  <style>
+    :root {
+      --bg: #05070d;
+      --accent: #3aff7a;
+      --accent2: #4da6ff;
+      --text: #e6e6e6;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background: radial-gradient(circle at top, #0b1225, var(--bg));
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      position: relative;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: url('bg-placeholder.jpg') center / cover no-repeat;
+      opacity: 0.15;
+      z-index: -1;
+    }
+
+    h1 {
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      animation: glow 2.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from { text-shadow: 0 0 10px var(--accent); }
+      to   { text-shadow: 0 0 25px var(--accent), 0 0 50px var(--accent2); }
+    }
+
+    .subtitle {
+      margin-top: 1rem;
+      opacity: 0.8;
+      font-size: 1.1rem;
+    }
+
+    /* Countdown */
+    .countdown {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 3rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .time-box {
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(6px);
+      padding: 1.5rem 2rem;
+      border-radius: 14px;
+      min-width: 110px;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .time-box:nth-child(even) { animation-delay: 2s; }
+
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .number {
+      font-size: 2.2rem;
+      color: var(--accent);
+    }
+
+    .label {
+      font-size: 0.75rem;
+      opacity: 0.7;
+      margin-top: 0.4rem;
+    }
+
+    /* Media section */
+    .media {
+      padding: 5rem 2rem;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .media h2 {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      border-radius: 18px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    }
+
+    .card img {
+      width: 100%;
+      display: block;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.8rem;
+      opacity: 0.6;
+    }
+  /* Lightbox */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 1000;
+    }
+
+    .lightbox.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .lightbox img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 16px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+      animation: zoomIn 0.35s ease;
+    }
+
+    @keyframes zoomIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .lightbox::after {
+      content: "✕";
+      position: fixed;
+      top: 24px;
+      right: 32px;
+      font-size: 2rem;
+      color: white;
+      cursor: pointer;
+      opacity: 0.7;
+    }
+
+    .lightbox:hover::after { opacity: 1; }
+
+  </style>
+  </head>
+<body>  <section class="hero">
+    <h1>FUNWORLD MEMORIEZ</h1>
+    <div class="subtitle">A new Minecraft subserver is coming online</div><div class="countdown" id="countdown">
+  <div class="time-box"><div class="number" id="days">--</div><div class="label">DAYS</div></div>
+  <div class="time-box"><div class="number" id="hours">--</div><div class="label">HOURS</div></div>
+  <div class="time-box"><div class="number" id="minutes">--</div><div class="label">MINUTES</div></div>
+  <div class="time-box"><div class="number" id="seconds">--</div><div class="label">SECONDS</div></div>
+</div>
+
+  </section>  <section class="media">
+    <h2>World Preview</h2>
+    <div class="grid">
+      <!-- Replace with screenshots or videos -->
+      <div class="card"><img src="screenshot1.jpg" alt="Screenshot 1"></div>
+      <div class="card"><img src="screenshot2.jpg" alt="Screenshot 2"></div>
+      <div class="card"><img src="screenshot3.jpg" alt="Screenshot 3"></div>
+    </div>
+  </section>  <!-- Lightbox -->  <div class="lightbox" id="lightbox">
+    <img src="" alt="Expanded view" id="lightbox-img" />
+  </div>  <footer>
+    © 2026 Aquaris Network — Minecraft Server
+  </footer>  <script>
+    // Lightbox logic
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+
+    document.querySelectorAll('.card img').forEach(img => {
+      img.addEventListener('click', () => {
+        lightboxImg.src = img.src;
+        lightbox.classList.add('active');
+      });
+    });
+
+    lightbox.addEventListener('click', () => {
+      lightbox.classList.remove('active');
+    });
+
+
+    // Set launch date here (UTC recommended)
+    const launchDate = new Date('2026-02-01T10:00:00Z').getTime();
+
+    const d = document.getElementById('days');
+    const h = document.getElementById('hours');
+    const m = document.getElementById('minutes');
+    const s = document.getElementById('seconds');
+
+    setInterval(() => {
+      const now = Date.now();
+      const diff = launchDate - now;
+
+      if (diff <= 0) {
+        d.textContent = h.textContent = m.textContent = s.textContent = '00';
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      d.textContent = days;
+      h.textContent = hours.toString().padStart(2, '0');
+      m.textContent = minutes.toString().padStart(2, '0');
+      s.textContent = seconds.toString().padStart(2, '0');
+    }, 1000);
+  </script></body>
+</html>
