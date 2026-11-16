@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>North Pole Advent &amp; Minigames</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            midnight: '#070b11',
+            frost: '#101824',
+            gold: '#e7c578',
+            crimson: '#c4362c',
+            pine: '#1c4d38',
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root {
+      --bg-midnight: #070b11;
+      --accent-gold: #e7c578;
+      --accent-crimson: #c4362c;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg-midnight);
+      color: #f8fafc;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 18% 12%, rgba(231, 197, 120, 0.08), transparent 38%),
+        radial-gradient(circle at 82% 18%, rgba(196, 54, 44, 0.1), transparent 42%),
+        radial-gradient(circle at 50% 90%, rgba(28, 77, 56, 0.12), transparent 50%),
+        #070b11;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .glass-panel {
+      background: rgba(16, 24, 36, 0.72);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(231, 197, 120, 0.18);
+      box-shadow: 0 20px 45px -18px rgba(0, 0, 0, 0.75);
+    }
+
+    .glass-panel-subtle {
+      background: rgba(13, 20, 30, 0.62);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Advent Door Styling & Animations */
+    .advent-door {
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s ease, border-color 0.28s ease;
+    }
+
+    .advent-door.unlocked:hover {
+      transform: translateY(-4px);
+      border-color: rgba(231, 197, 120, 0.75);
+      box-shadow: 0 12px 28px -8px rgba(231, 197, 120, 0.28);
+    }
+
+    .advent-door.opened {
+      background: linear-gradient(145deg, rgba(28, 77, 56, 0.42), rgba(16, 24, 36, 0.85));
+      border-color: rgba(231, 197, 120, 0.45);
+    }
+
+    .advent-door.today-highlight {
+      box-shadow: 0 0 0 2px rgba(231, 197, 120, 0.55), 0 14px 32px -10px rgba(231, 197, 120, 0.35);
+    }
+
+    @keyframes rattle {
+      0%, 100% { transform: translateX(0) rotate(0deg); }
+      20% { transform: translateX(-5px) rotate(-2deg); }
+      40% { transform: translateX(5px) rotate(2deg); }
+      60% { transform: translateX(-4px) rotate(-1.5deg); }
+      80% { transform: translateX(4px) rotate(1.5deg); }
+    }
+
+    .animate-rattle {
+      animation: rattle 0.42s ease-in-out;
+    }
+
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+
+    .animate-float {
+      animation: floatSlow 3.4s ease-in-out infinite;
+    }
+
+    /* Memory Card Flip */
+    .memory-card-inner {
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      transform-style: preserve-3d;
+    }
+
+    .memory-card.flipped .memory-card-inner,
+    .memory-card.matched .memory-card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .memory-face {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    .memory-back {
+      transform: rotateY(180deg);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #070b11;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(231, 197, 120, 0.25);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(231, 197, 120, 0.45);
+    }
+  </style>
+</head>
+<body class="text-slate-100 antialiased selection:bg-gold/30 selection:text-gold">
+  <!-- Ambient Snow Canvas -->
+  <canvas id="snow-canvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+
+  <!-- Toast Notification -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4 sm:px-0"></div>
+
+  <!-- Top Navigation Header -->
+  <header class="sticky top-0 z-30 glass-panel border-x-0 border-t-0">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+      <a href="../index.html" class="inline-flex items-center gap-2 text-sm font-medium text-gold hover:text-amber-200 transition-colors px-3 py-2 rounded-xl hover:bg-white/5">
+        <span aria-hidden="true">&larr;</span>
+        <span>Back to Countdown</span>
+      </a>
+
+      <div class="hidden md:flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-400">
+        <span class="w-1.5 h-1.5 rounded-full bg-gold"></span>
+        <span>North Pole Workshop &amp; Arcade</span>
+        <span class="w-1.5 h-1.5 rounded-full bg-crimson"></span>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <button id="sound-toggle-btn" type="button" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium glass-panel-subtle hover:border-gold/50 text-slate-200 transition-all" aria-label="Toggle festive audio">
+          <span id="sound-icon">🔇</span>
+          <span id="sound-label" class="hidden sm:inline">Sound Off</span>
+        </button>
+
+        <button id="reset-progress-btn" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-crimson/20 hover:bg-crimson/35 border border-crimson/40 text-red-200 transition-all">
+          <span>Reset Progress</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-14">
+    <!-- Hero & Real-Date Status Banner -->
+    <section class="text-center max-w-3xl mx-auto space-y-4">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gold/10 border border-gold/30 text-gold text-xs font-semibold tracking-wider uppercase">
+        <span>✨</span>
+        <span id="calendar-season-badge">Official North Pole Calendar</span>
+      </div>
+      <h1 class="font-serif text-3xl sm:text-5xl font-bold tracking-tight text-white">
+        24 Days of <span class="text-gold italic">Holiday Wonder</span>
+      </h1>
+      <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+        Open a new festive door each day from December 1st through Christmas Eve to uncover workshop lore, holiday challenges, and collectible ornaments for your mantlepiece—or step straight into the North Pole Arcade anytime.
+      </p>
+
+      <!-- Live Countdown / Active Date Banner -->
+      <div id="date-status-banner" class="mt-6 glass-panel rounded-2xl p-4 sm:p-6">
+        <div id="pre-december-countdown" class="hidden space-y-3">
+          <p class="text-xs sm:text-sm uppercase tracking-widest text-gold font-semibold">
+            Door 1 Unlocks December 1st at Midnight
+          </p>
+          <div class="grid grid-cols-4 gap-2 sm:gap-4 max-w-md mx-auto">
+            <div class="rounded-xl bg-midnight/80 border border-white/10 p-2.5 sm:p-3">
+              <div id="cd-days" class="text-xl sm:text-3xl font-bold text-white tabular-nums">00</div>
+              <div class="text-[11px] uppercase tracking-wider text-slate-400">Days</div>
+            </div>
+            <div class="rounded-xl bg-midnight/80 border border-white/10 p-2.5 sm:p-3">
+              <div id="cd-hours" class="text-xl sm:text-3xl font-bold text-white tabular-nums">00</div>
+              <div class="text-[11px] uppercase tracking-wider text-slate-400">Hours</div>
+            </div>
+            <div class="rounded-xl bg-midnight/80 border border-white/10 p-2.5 sm:p-3">
+              <div id="cd-mins" class="text-xl sm:text-3xl font-bold text-white tabular-nums">00</div>
+              <div class="text-[11px] uppercase tracking-wider text-slate-400">Mins</div>
+            </div>
+            <div class="rounded-xl bg-midnight/80 border border-white/10 p-2.5 sm:p-3">
+              <div id="cd-secs" class="text-xl sm:text-3xl font-bold text-gold tabular-nums">00</div>
+              <div class="text-[11px] uppercase tracking-wider text-slate-400">Secs</div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-400">
+            All 24 doors are sealed until December begins. Enjoy the North Pole Minigames Arcade below while you wait!
+          </p>
+        </div>
+
+        <div id="active-december-status" class="hidden flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
+          <div>
+            <p class="text-xs uppercase tracking-widest text-gold font-semibold" id="active-date-label">December</p>
+            <p class="text-base sm:text-lg font-medium text-white mt-0.5" id="active-unlock-summary">
+              Doors 1 through 1 are unlocked today!
+            </p>
+          </div>
+          <a href="#arcade-section" class="shrink-0 px-4 py-2.5 rounded-xl bg-gold text-midnight font-semibold text-xs sm:text-sm hover:bg-amber-300 transition-colors">
+            Play Arcade Minigames &darr;
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mantlepiece Ornament Shelf -->
+    <section aria-labelledby="shelf-heading" class="glass-panel rounded-3xl p-5 sm:p-7">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-white/10">
+        <div>
+          <h2 id="shelf-heading" class="font-serif text-xl sm:text-2xl font-bold text-white flex items-center gap-2.5">
+            <span>🎄</span>
+            <span>Mantlepiece Ornament Shelf</span>
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1">
+            Each opened Advent door adds a keepsake ornament to your festive collection.
+          </p>
+        </div>
+        <div class="inline-flex items-center gap-2.5 self-start sm:self-auto px-4 py-2 rounded-2xl bg-midnight/80 border border-gold/30">
+          <span class="text-gold text-sm font-semibold tabular-nums" id="ornament-counter">0 / 24 Collected</span>
+        </div>
+      </div>
+
+      <!-- Wooden Mantle Ledge Visual -->
+      <div class="mt-5 relative">
+        <div id="ornament-shelf-grid" class="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-12 gap-2.5 sm:gap-3">
+          <!-- Populated dynamically via JS -->
+        </div>
+        <div class="mt-3 h-2.5 rounded-full bg-gradient-to-r from-amber-950 via-amber-800/80 to-amber-950 border border-amber-600/30 shadow-inner"></div>
+      </div>
+    </section>
+
+    <!-- 24-Door Advent Calendar Grid -->
+    <section aria-labelledby="calendar-heading" class="space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+        <div>
+          <h2 id="calendar-heading" class="font-serif text-2xl sm:text-3xl font-bold text-white">
+            The Advent Doors
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400">
+            Click any unlocked door to reveal today&rsquo;s festive surprise and ornament.
+          </p>
+        </div>
+        <div class="flex items-center gap-4 text-xs text-slate-400">
+          <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-600"></span> Locked</span>
+          <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-gold"></span> Ready to Open</span>
+          <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Collected</span>
+        </div>
+      </div>
+
+      <div id="advent-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5 sm:gap-4">
+        <!-- 24 Doors rendered by JS -->
+      </div>
+    </section>
+
+    <!-- North Pole Minigames Arcade -->
+    <section id="arcade-section" aria-labelledby="arcade-heading" class="space-y-6 pt-4">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-5">
+        <div>
+          <div class="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-gold font-semibold mb-1">
+            <span>🕹️</span>
+            <span>Open All Season Long</span>
+          </div>
+          <h2 id="arcade-heading" class="font-serif text-2xl sm:text-3xl font-bold text-white">
+            North Pole Minigames Arcade
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1">
+            All four holiday games are playable anytime—no door unlocks required. High scores save automatically.
+          </p>
+        </div>
+
+        <!-- Game Selector Tabs -->
+        <div class="flex flex-wrap gap-2" role="tablist" aria-label="Choose a minigame">
+          <button type="button" data-game-tab="catcher" class="game-tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-gold text-midnight transition-all">
+            🎁 Gift Catcher
+          </button>
+          <button type="button" data-game-tab="memory" class="game-tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold glass-panel-subtle text-slate-300 hover:text-white transition-all">
+            🃏 Memory Match
+          </button>
+          <button type="button" data-game-tab="simon" class="game-tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold glass-panel-subtle text-slate-300 hover:text-white transition-all">
+            🔔 Carol Simon
+          </button>
+          <button type="button" data-game-tab="trivia" class="game-tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold glass-panel-subtle text-slate-300 hover:text-white transition-all">
+            ❄️ Word &amp; Trivia
+          </button>
+        </div>
+      </div>
+
+      <!-- Arcade Cabinet Container -->
+      <div class="glass-panel rounded-3xl p-5 sm:p-8">
+        <!-- GAME 1: GIFT CATCHER -->
+        <div id="game-panel-catcher" class="game-panel space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 class="font-serif text-xl sm:text-2xl font-bold text-white">Santa&rsquo;s Gift Catcher</h3>
+              <p class="text-xs sm:text-sm text-slate-400">Move the sleigh with your mouse, touch/drag, or &larr;/&rarr; keys. Catch gifts (+10) &amp; candy canes (+25), dodge lumps of coal!</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="px-3.5 py-2 rounded-xl bg-midnight/80 border border-white/10 text-xs">
+                <span class="text-slate-400">Best:</span>
+                <span id="catcher-best" class="font-bold text-gold tabular-nums ml-1">0</span>
+              </div>
+              <button id="catcher-start-btn" type="button" class="px-4 py-2.5 rounded-xl bg-crimson hover:bg-red-600 text-white font-semibold text-xs sm:text-sm transition-colors shadow-lg shadow-crimson/25">
+                Start Sleigh Run
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-midnight/70 border border-white/10 text-xs sm:text-sm">
+            <div>Score: <span id="catcher-score" class="font-bold text-gold tabular-nums">0</span></div>
+            <div>Lives: <span id="catcher-lives" class="tracking-wider">❤️❤️❤️</span></div>
+            <div>Speed: <span id="catcher-level" class="font-semibold text-emerald-400 tabular-nums">1x</span></div>
+          </div>
+
+          <div id="catcher-canvas-wrapper" class="relative w-full h-[360px] sm:h-[420px] rounded-2xl overflow-hidden border border-gold/25 bg-gradient-to-b from-[#091322] via-[#0d1c30] to-[#13293d] select-none touch-none">
+            <canvas id="catcher-canvas" class="w-full h-full block"></canvas>
+            <div id="catcher-overlay" class="absolute inset-0 flex flex-col items-center justify-center bg-midnight/75 backdrop-blur-sm p-6 text-center">
+              <div class="text-4xl mb-2">🛷</div>
+              <h4 class="font-serif text-xl sm:text-2xl font-bold text-white">Ready for Takeoff?</h4>
+              <p id="catcher-overlay-msg" class="text-xs sm:text-sm text-slate-300 max-w-md mt-1 mb-4">
+                Guide Santa&rsquo;s sleigh across the snowy sky to catch falling presents before they hit the snowbank.
+              </p>
+              <button id="catcher-overlay-btn" type="button" class="px-5 py-2.5 rounded-xl bg-gold text-midnight font-bold text-sm hover:bg-amber-300 transition-colors">
+                Launch Sleigh
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- GAME 2: FESTIVE MEMORY MATCH -->
+        <div id="game-panel-memory" class="game-panel hidden space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 class="font-serif text-xl sm:text-2xl font-bold text-white">Festive Memory Match</h3>
+              <p class="text-xs sm:text-sm text-slate-400">Flip two holiday cards at a time to pair all 8 workshop keepsakes in as few moves as possible.</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="px-3.5 py-2 rounded-xl bg-midnight/80 border border-white/10 text-xs">
+                <span class="text-slate-400">Best Moves:</span>
+                <span id="memory-best" class="font-bold text-gold tabular-nums ml-1">--</span>
+              </div>
+              <button id="memory-reset-btn" type="button" class="px-4 py-2.5 rounded-xl bg-gold hover:bg-amber-300 text-midnight font-semibold text-xs sm:text-sm transition-colors">
+                New Shuffle
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-midnight/70 border border-white/10 text-xs sm:text-sm">
+            <div>Moves: <span id="memory-moves" class="font-bold text-gold tabular-nums">0</span></div>
+            <div>Pairs: <span id="memory-pairs" class="font-bold text-emerald-400 tabular-nums">0 / 8</span></div>
+            <div>Time: <span id="memory-timer" class="font-bold text-slate-200 tabular-nums">00:00</span></div>
+          </div>
+
+          <div id="memory-grid" class="grid grid-cols-4 gap-2.5 sm:gap-4 max-w-lg mx-auto">
+            <!-- 16 Memory Cards generated by JS -->
+          </div>
+        </div>
+
+        <!-- GAME 3: CAROL SIMON SAYS -->
+        <div id="game-panel-simon" class="game-panel hidden space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 class="font-serif text-xl sm:text-2xl font-bold text-white">Carol Bell Simon Says</h3>
+              <p class="text-xs sm:text-sm text-slate-400">Watch and listen to the North Pole chimes, then repeat the growing festive melody.</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="px-3.5 py-2 rounded-xl bg-midnight/80 border border-white/10 text-xs">
+                <span class="text-slate-400">Best Round:</span>
+                <span id="simon-best" class="font-bold text-gold tabular-nums ml-1">0</span>
+              </div>
+              <button id="simon-start-btn" type="button" class="px-4 py-2.5 rounded-xl bg-crimson hover:bg-red-600 text-white font-semibold text-xs sm:text-sm transition-colors">
+                Start Melody
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-midnight/70 border border-white/10 text-xs sm:text-sm">
+            <div>Round: <span id="simon-round" class="font-bold text-gold tabular-nums">0</span></div>
+            <div id="simon-status" class="font-medium text-slate-300">Press &ldquo;Start Melody&rdquo; to play</div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3.5 sm:gap-5 max-w-md mx-auto py-2">
+            <button type="button" data-pad="0" class="simon-pad h-32 sm:h-36 rounded-2xl border-2 border-red-400/40 bg-red-900/40 hover:bg-red-800/50 flex flex-col items-center justify-center gap-2 transition-all active:scale-95">
+              <span class="text-3xl sm:text-4xl">🔔</span>
+              <span class="text-xs font-semibold uppercase tracking-wider text-red-200">Crimson Bell</span>
+            </button>
+            <button type="button" data-pad="1" class="simon-pad h-32 sm:h-36 rounded-2xl border-2 border-emerald-400/40 bg-emerald-900/40 hover:bg-emerald-800/50 flex flex-col items-center justify-center gap-2 transition-all active:scale-95">
+              <span class="text-3xl sm:text-4xl">🎄</span>
+              <span class="text-xs font-semibold uppercase tracking-wider text-emerald-200">Pine Chime</span>
+            </button>
+            <button type="button" data-pad="2" class="simon-pad h-32 sm:h-36 rounded-2xl border-2 border-amber-300/40 bg-amber-900/40 hover:bg-amber-800/50 flex flex-col items-center justify-center gap-2 transition-all active:scale-95">
+              <span class="text-3xl sm:text-4xl">⭐</span>
+              <span class="text-xs font-semibold uppercase tracking-wider text-amber-200">Starlight Note</span>
+            </button>
+            <button type="button" data-pad="3" class="simon-pad h-32 sm:h-36 rounded-2xl border-2 border-sky-400/40 bg-sky-900/40 hover:bg-sky-800/50 flex flex-col items-center justify-center gap-2 transition-all active:scale-95">
+              <span class="text-3xl sm:text-4xl">❄️</span>
+              <span class="text-xs font-semibold uppercase tracking-wider text-sky-200">Frost Tone</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- GAME 4: HOLIDAY WORD & TRIVIA SPRINT -->
+        <div id="game-panel-trivia" class="game-panel hidden space-y-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 class="font-serif text-xl sm:text-2xl font-bold text-white">Holiday Word &amp; Trivia Sprint</h3>
+              <p class="text-xs sm:text-sm text-slate-400">Answer festive trivia and unscramble North Pole words against the 45-second clock to build your streak multiplier!</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="px-3.5 py-2 rounded-xl bg-midnight/80 border border-white/10 text-xs">
+                <span class="text-slate-400">High Score:</span>
+                <span id="trivia-best" class="font-bold text-gold tabular-nums ml-1">0</span>
+              </div>
+              <button id="trivia-start-btn" type="button" class="px-4 py-2.5 rounded-xl bg-gold hover:bg-amber-300 text-midnight font-semibold text-xs sm:text-sm transition-colors">
+                Start Sprint
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-midnight/70 border border-white/10 text-xs sm:text-sm">
+            <div>Score: <span id="trivia-score" class="font-bold text-gold tabular-nums">0</span></div>
+            <div>Streak: <span id="trivia-streak" class="font-bold text-emerald-400 tabular-nums">0x</span></div>
+            <div>Time Left: <span id="trivia-time" class="font-bold text-crimson tabular-nums">45s</span></div>
+          </div>
+
+          <div id="trivia-stage" class="rounded-2xl bg-midnight/75 border border-white/10 p-6 sm:p-8 text-center space-y-5">
+            <div id="trivia-idle-view" class="space-y-3 py-4">
+              <div class="text-4xl">📜</div>
+              <h4 class="font-serif text-xl font-bold text-white">Test Your Yuletide Knowledge</h4>
+              <p class="text-xs sm:text-sm text-slate-400 max-w-md mx-auto">
+                Solve rapid-fire Christmas trivia questions and festive word scrambles before time runs out.
+              </p>
+              <button id="trivia-center-start" type="button" class="px-5 py-2.5 rounded-xl bg-crimson hover:bg-red-600 text-white font-semibold text-sm transition-colors">
+                Begin 45s Sprint
+              </button>
+            </div>
+
+            <div id="trivia-active-view" class="hidden space-y-5 max-w-xl mx-auto">
+              <span id="trivia-badge" class="inline-block px-3 py-1 rounded-full text-[11px] uppercase tracking-wider font-semibold bg-gold/15 text-gold border border-gold/30">
+                Festive Trivia
+              </span>
+              <h4 id="trivia-prompt" class="font-serif text-lg sm:text-2xl font-bold text-white leading-snug">
+                Question goes here
+              </h4>
+              <div id="trivia-scramble-box" class="hidden">
+                <div id="trivia-scrambled-word" class="inline-block px-5 py-2.5 rounded-xl bg-frost border border-gold/40 font-mono text-xl sm:text-2xl tracking-[0.28em] text-gold font-bold">
+                  ELMISTTOE
+                </div>
+                <p id="trivia-scramble-hint" class="text-xs text-slate-400 mt-2">Hint: Hang it in a doorway</p>
+              </div>
+              <div id="trivia-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+                <!-- 4 Answer buttons rendered dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="relative z-10 border-t border-white/10 mt-16 py-8 text-center text-xs text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p>Crafted at the North Pole Workshop &bull; Real-Date Advent Edition</p>
+      <a href="../index.html" class="text-gold hover:underline">&larr; Return to Main Christmas Countdown</a>
+    </div>
+  </footer>
+
+  <!-- Advent Door Reward Modal -->
+  <div id="door-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="modal-door-title">
+    <div class="glass-panel rounded-3xl max-w-lg w-full p-6 sm:p-8 relative border-gold/40 shadow-2xl space-y-5">
+      <button id="modal-close-btn" type="button" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center text-slate-300 hover:text-white transition-colors" aria-label="Close modal">
+        &times;
+      </button>
+
+      <div class="flex items-center gap-3">
+        <div id="modal-ornament-badge" class="w-14 h-14 rounded-2xl bg-gradient-to-br from-gold/25 to-crimson/25 border border-gold/50 flex items-center justify-center text-3xl animate-float">
+          🎄
+        </div>
+        <div>
+          <span id="modal-day-label" class="text-xs uppercase tracking-widest text-gold font-semibold">December 1</span>
+          <h3 id="modal-door-title" class="font-serif text-2xl font-bold text-white">Workshop Welcome</h3>
+        </div>
+      </div>
+
+      <div class="rounded-2xl bg-midnight/75 border border-white/10 p-4 sm:p-5 space-y-3">
+        <p id="modal-lore-text" class="text-sm sm:text-base text-slate-200 leading-relaxed"></p>
+        <div class="pt-2 border-t border-white/10">
+          <p class="text-xs uppercase tracking-wider text-gold font-semibold mb-1">Today&rsquo;s Festive Spark</p>
+          <p id="modal-challenge-text" class="text-xs sm:text-sm text-slate-300 italic"></p>
+        </div>
+      </div>
+
+      <!-- Interactive Mini-Reward inside Modal -->
+      <div id="modal-interactive-box" class="rounded-2xl bg-pine/25 border border-emerald-400/25 p-4 text-center space-y-2.5">
+        <p id="modal-reward-prompt" class="text-xs sm:text-sm font-medium text-emerald-200">
+          Tap the ornament charm below to ring the workshop chime and polish your keepsake!
+        </p>
+        <button id="modal-charm-btn" type="button" class="px-4 py-2 rounded-xl bg-gold text-midnight font-semibold text-xs sm:text-sm hover:bg-amber-300 transition-transform active:scale-95">
+          ✨ Ring Festive Charm
+        </button>
+        <p id="modal-charm-feedback" class="text-xs text-gold font-medium hidden"></p>
+      </div>
+
+      <div class="flex items-center justify-between pt-1">
+        <span id="modal-ornament-name" class="text-xs text-slate-400">Ornament Collected</span>
+        <button id="modal-done-btn" type="button" class="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-semibold transition-colors">
+          Place on Mantlepiece
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal for Resetting Progress (No browser confirm()) -->
+  <div id="reset-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="reset-modal-title">
+    <div class="glass-panel rounded-3xl max-w-md w-full p-6 space-y-4 border-crimson/40">
+      <h3 id="reset-modal-title" class="font-serif text-xl font-bold text-white">Reset Collected Ornaments &amp; Scores?</h3>
+      <p class="text-sm text-slate-300 leading-relaxed">
+        This will clear your opened Advent doors, empty your Mantlepiece Ornament Shelf, and reset saved arcade high scores on this device. Real-date calendar locks will remain active.
+      </p>
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button id="reset-cancel-btn" type="button" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs sm:text-sm font-medium">
+          Cancel
+        </button>
+        <button id="reset-confirm-btn" type="button" class="px-4 py-2 rounded-xl bg-crimson hover:bg-red-600 text-white text-xs sm:text-sm font-semibold">
+          Yes, Reset Everything
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      /* =========================================================================
+         1. DATA: 24 DAYS OF ADVENT LORE, ORNAMENTS & CHALLENGES
+      ========================================================================= */
+      const ADVENT_DOORS = [
+        { day: 1, icon: '🕯️', ornament: 'First Advent Candle', title: 'Lighting the North Pole Lanterns', lore: 'At the stroke of midnight on December 1st, the Master Lantern-Keepers ignite the Great Aurora Beacon atop Santa’s workshop, signaling that the final stretch of toy crafting has begun.', challenge: 'Light a candle or string up a strand of warm fairy lights to welcome December.', charmNote: 'Warmth restored! +1 Holiday Glow added to your mantlepiece.' },
+        { day: 2, icon: '☕', ornament: 'Peppermint Cocoa Mug', title: 'Secret of the Reindeer Cocoa', lore: 'Mrs. Claus adds a pinch of crushed candy cane, cinnamon bark, and a whisper of vanilla bean to every mug—kept simmering over enchanted hearth embers.', challenge: 'Make yourself a hot drink today and enjoy five quiet minutes without screens.', charmNote: 'Steaming cocoa chime! A cozy peppermint aroma fills the workshop.' },
+        { day: 3, icon: '🧦', ornament: 'Knit Hearth Stocking', title: 'The Woolly Sock Guild', lore: 'Before a single wooden train is painted, the Knitting Elves finish 10,000 crimson-and-gold stockings so every chimney mantle is ready.', challenge: 'Put on your coziest socks and send a quick hello to someone you miss.', charmNote: 'Stocking hung with care! Ready for Christmas Eve.' },
+        { day: 4, icon: '🦌', ornament: 'Brass Sleigh Bell', title: 'Reindeer Flight School', lore: 'Dasher and Dancer lead morning figure-eights above the frozen tundra while Rudolph practices illuminating dense Arctic snow squalls.', challenge: 'Step outside and take three deep breaths of crisp winter or evening air.', charmNote: 'Silver sleigh bell rings crystal clear across the snow!' },
+        { day: 5, icon: '🍪', ornament: 'Star Gingerbread Cookie', title: 'The Great Gingerbread Blueprint', lore: 'Every gingerbread house built in the North Pole canteen must pass structural inspection by an elf holding a candy-cane plumb line.', challenge: 'Bake or share a sweet treat with family, friends, or neighbors.', charmNote: 'Freshly baked gingerbread snap! Sweet perfection.' },
+        { day: 6, icon: '❄️', ornament: 'Crystal Snowflake', title: 'The Ice Sculptor’s Secret', lore: 'No two snowflakes fall alike because Jack Frost hand-etches each crystal prism using a sliver of northern starlight.', challenge: 'Cut a paper snowflake or spot winter patterns in frosty windows.', charmNote: 'Frost crystal chimes softly with an icy sparkle.' },
+        { day: 7, icon: '📜', ornament: 'Wax-Sealed Wish Scroll', title: 'Sorting the Mountain of Letters', lore: 'The Post Office Elves sort letters by chimney size, rooftop pitch, and whether a plate of cookies was promised in the postscript.', challenge: 'Write down three things you are grateful for this year.', charmNote: 'Gold wax seal stamped! Your holiday wish is logged.' },
+        { day: 8, icon: '🚂', ornament: 'Clockwork Tin Train', title: 'Winding the Miniature Express', lore: 'In Wing B of the workshop, clockmakers tune tiny brass whistles so every toy locomotive chugs in harmonious C-major.', challenge: 'Listen to an instrumental holiday classic while tackling a task today.', charmNote: 'All aboard! The miniature whistle blows a cheerful note.' },
+        { day: 9, icon: '🌲', ornament: 'Evergreen Pine Sprig', title: 'The Whispering Pine Forest', lore: 'The ancient evergreens bordering Santa’s village shed scented needles that the elves weave into wreaths for every workshop door.', challenge: 'Add a touch of greenery, pine scent, or festive decor to your desk.', charmNote: 'Fresh pine needle sparkle added to your shelf!' },
+        { day: 10, icon: '🧤', ornament: 'Ruby Snow Mittens', title: 'Snowball Championship Rules', lore: 'Rule #1 of the Annual Elf Snowball Tournament: never hide behind the reindeer sleighs, and always call a truce for lunch.', challenge: 'Do something playful today—sketch a snowman or tell a seasonal joke.', charmNote: 'Woolly mittens clapped together! Snow dust shimmers.' },
+        { day: 11, icon: '🎶', ornament: 'Golden Carol Harp', title: 'The Midnight Choir Rehearsal', lore: 'Every evening at eight, the toy-painters lay down their brushes and harmonize three-part carols from the balcony.', challenge: 'Hum or sing your favorite holiday song out loud today.', charmNote: 'Harpsichord arpeggio echoes through the rafters!' },
+        { day: 12, icon: '🍬', ornament: 'Swirled Candy Cane', title: 'The Peppermint Twist Machine', lore: 'It takes exactly three elves—one to pull, one to stripe, and one to hook—to shape each giant peppermint crook.', challenge: 'Treat yourself to a peppermint sweet or candy cane today.', charmNote: 'Peppermint crunch! A bright red-and-white swirl gleams.' },
+        { day: 13, icon: '🦉', ornament: 'Snowy Barn Owl', title: 'Northern Night Watch', lore: 'A parliament of snowy owls perches along the workshop gables, alerting the sleigh crew whenever clear flying weather arrives.', challenge: 'Look up at the night sky tonight and spot the brightest star.', charmNote: 'Soft owl hoot under a canopy of winter stars.' },
+        { day: 14, icon: '🎁', ornament: 'Crimson Ribbon Box', title: 'The Infinite Ribbon Spool', lore: 'Legend says the Wrapping Department’s gold satin spool has never run out since 1823, no matter how many bows are tied.', challenge: 'Wrap a gift early or write a thoughtful card for someone special.', charmNote: 'Silk bow tied with a crisp celebratory flourish!' },
+        { day: 15, icon: '⛸️', ornament: 'Silver Ice Skate', title: 'Gliding on Mirror Pond', lore: 'When the Northern Lights ripple green and violet overhead, the entire village laces up skates for midnight loops on Mirror Pond.', challenge: 'Put on upbeat music and stretch or dance for two minutes.', charmNote: 'Crisp skate blades carve a shimmering figure-eight!' },
+        { day: 16, icon: '🧸', ornament: 'Velvet Teddy Bear', title: 'The Hug-Testing Station', lore: 'Before any plush bear leaves the workshop, Quality Control Elves give it a certified five-second squeeze for maximum comfort.', challenge: 'Give a genuine hug or kind compliment to someone today.', charmNote: 'Certified cozy! Maximum plushness achieved.' },
+        { day: 17, icon: '🌟', ornament: 'North Star Compass', title: 'Polishing the Polaris Lens', lore: 'Santa’s brass pocket compass doesn’t point north—it points toward whichever home needs an extra measure of holiday cheer.', challenge: 'Reach out to a friend or relative you haven’t spoken with recently.', charmNote: 'Compass needle locks onto true holiday spirit!' },
+        { day: 18, icon: '🥧', ornament: 'Spiced Mince Tart', title: 'Nutmeg & Clove Alchemy', lore: 'The North Pole bakery balances nutmeg, orange zest, and roasted chestnuts to create aromas detectable two valleys away.', challenge: 'Enjoy a spiced snack—cinnamon toast, chai, or a festive pastry.', charmNote: 'Warm spice chime! Comfort level raised to 100%.' },
+        { day: 19, icon: '🛷', ornament: 'Gilded Sleigh Runner', title: 'Waxing the Sleigh Runners', lore: 'Three coats of cloud-berry wax allow Santa’s sleigh runners to glide effortlessly from snowy rooftops to moonlit beaches.', challenge: 'Tidy up one small corner of your room or workspace for a fresh start.', charmNote: 'Gleaming gold runners polished to mirror brightness!' },
+        { day: 20, icon: '⛄', ornament: 'Top-Hat Snowman', title: 'The Mayor of Frosty Square', lore: 'Every December 20th, the village builds a twelve-foot snowman in the central square wearing an antique velvet top hat.', challenge: 'Share a favorite childhood holiday memory with someone.', charmNote: 'Jolly snowman tip of the hat! Magic is in the air.' },
+        { day: 21, icon: '🌌', ornament: 'Aurora Borealis Orb', title: 'Winter Solstice Aurora', lore: 'On the longest night of the year, ribbons of emerald and gold aurora dance directly above the North Pole chimney.', challenge: 'Dim the bright lights tonight and enjoy a calm, cozy evening.', charmNote: 'Northern Lights shimmer inside your glass orb!' },
+        { day: 22, icon: '📖', ornament: 'Fireside Storybook', title: 'Twas Two Nights Before', lore: 'Santa gathers the workshop around the great stone fireplace to read classic winter tales before the final packing begins.', challenge: 'Read a chapter of a good book or a classic Christmas poem tonight.', charmNote: 'Pages flutter softly beside a crackling hearth.' },
+        { day: 23, icon: '🧭', ornament: 'Global Flight Chart', title: 'Checking the List Twice', lore: 'Every time zone, rooftop landing pad, and carrot-for-Rudolph coordinate is double-checked on the glowing holographic globe.', challenge: 'Finish any last-minute holiday prep so tomorrow stays stress-free.', charmNote: 'Flight path verified! All systems green for takeoff.' },
+        { day: 24, icon: '🎅', ornament: 'Santa’s Master Sleigh Key', title: 'Christmas Eve Launch!', lore: 'The sleigh is loaded, the bells are jingling, and the reindeer stand ready beneath a star-filled sky. Merry Christmas Eve!', challenge: 'Leave out a treat, soak in the magic, and wish everyone a Merry Christmas!', charmNote: 'Ho, ho, ho! All 24 ornaments shine together on your mantlepiece!' }
+      ];
+
+      /* =========================================================================
+         2. STORAGE & STRICT REAL-DATE STATE (NO SPOILER / DEMO OVERRIDES)
+      ========================================================================= */
+      const STORAGE_KEYS = {
+        OPENED_DOORS: 'np_advent_opened_doors_v1',
+        HIGH_SCORES: 'np_advent_high_scores_v1',
+        SOUND_ENABLED: 'np_advent_sound_v1'
+      };
+
+      const state = {
+        openedDoors: new Set(),
+        highScores: {
+          catcher: 0,
+          memory: null,
+          simon: 0,
+          trivia: 0
+        },
+        soundEnabled: false,
+        activeModalDay: null
+      };
+
+      function loadState() {
+        try {
+          const savedDoors = JSON.parse(localStorage.getItem(STORAGE_KEYS.OPENED_DOORS) || '[]');
+          if (Array.isArray(savedDoors)) {
+            // Only keep valid days 1..24 that are actually permitted by the real date
+            const maxAllowed = getMaxUnlockableDay(new Date());
+            savedDoors.forEach((d) => {
+              const num = Number(d);
+              if (Number.isInteger(num) && num >= 1 && num <= 24 && num <= maxAllowed) {
+                state.openedDoors.add(num);
+              }
+            });
+          }
+
+          const savedScores = JSON.parse(localStorage.getItem(STORAGE_KEYS.HIGH_SCORES) || '{}');
+          if (savedScores && typeof savedScores === 'object') {
+            if (typeof savedScores.catcher === 'number') state.highScores.catcher = savedScores.catcher;
+            if (typeof savedScores.memory === 'number') state.highScores.memory = savedScores.memory;
+            if (typeof savedScores.simon === 'number') state.highScores.simon = savedScores.simon;
+            if (typeof savedScores.trivia === 'number') state.highScores.trivia = savedScores.trivia;
+          }
+
+          state.soundEnabled = localStorage.getItem(STORAGE_KEYS.SOUND_ENABLED) === 'true';
+        } catch (err) {
+          // Fallback safely if localStorage is restricted
+        }
+      }
+
+      function saveOpenedDoors() {
+        try {
+          localStorage.setItem(STORAGE_KEYS.OPENED_DOORS, JSON.stringify([...state.openedDoors]));
+        } catch (err) {
+          // Ignore storage quota errors
+        }
+      }
+
+      function saveHighScores() {
+        try {
+          localStorage.setItem(STORAGE_KEYS.HIGH_SCORES, JSON.stringify(state.highScores));
+        } catch (err) {
+          // Ignore storage quota errors
+        }
+      }
+
+      /**
+       * Strict Real-Date Rule:
+       * - Before December (month < 11): returns 0 (all 24 doors locked)
+       * - December 1..24 (month === 11, date 1..24): returns current date (1..24)
+       * - December 25..31 (month === 11, date >= 25): returns 24 (all 24 doors unlockable)
+       */
+      function getMaxUnlockableDay(now = new Date()) {
+        const month = now.getMonth(); // 0 = Jan, 11 = Dec
+        const dayOfMonth = now.getDate();
+        if (month < 11) {
+          return 0;
+        }
+        return dayOfMonth >= 25 ? 24 : dayOfMonth;
+      }
+
+      function isDoorUnlocked(day, now = new Date()) {
+        return day <= getMaxUnlockableDay(now);
+      }
+
+      /* =========================================================================
+         3. WEB AUDIO API FESTIVE CHIMES & SOUND EFFECTS
+      ========================================================================= */
+      let audioCtx = null;
+
+      function ensureAudioContext() {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+          }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+        return audioCtx;
+      }
+
+      function playTone(freq, duration = 0.25, type = 'sine', volume = 0.12, delay = 0) {
+        if (!state.soundEnabled) return;
+        const ctx = ensureAudioContext();
+        if (!ctx) return;
+
+        try {
+          const startTime = ctx.currentTime + delay;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, startTime);
+
+          gain.gain.setValueAtTime(0.0001, startTime);
+          gain.gain.exponentialRampToValueAtTime(volume, startTime + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.start(startTime);
+          osc.stop(startTime + duration + 0.02);
+        } catch (err) {
+          // Ignore audio errors
+        }
+      }
+
+      function playFestiveChime(variant = 'open') {
+        if (!state.soundEnabled) return;
+        if (variant === 'locked') {
+          playTone(196, 0.14, 'triangle', 0.1, 0);
+          playTone(164.81, 0.18, 'triangle', 0.1, 0.09);
+        } else if (variant === 'open') {
+          // Sparkly C-major arpeggio
+          playTone(523.25, 0.35, 'sine', 0.11, 0);
+          playTone(659.25, 0.35, 'sine', 0.11, 0.08);
+          playTone(783.99, 0.4, 'sine', 0.11, 0.16);
+          playTone(1046.5, 0.6, 'sine', 0.13, 0.24);
+        } else if (variant === 'catch') {
+          playTone(880, 0.14, 'sine', 0.09, 0);
+          playTone(1174.66, 0.2, 'sine', 0.09, 0.06);
+        } else if (variant === 'coal') {
+          playTone(130.81, 0.28, 'sawtooth', 0.08, 0);
+        } else if (variant === 'match') {
+          playTone(587.33, 0.22, 'sine', 0.1, 0);
+          playTone(880, 0.32, 'sine', 0.11, 0.1);
+        }
+      }
+
+      function updateSoundButtonUI() {
+        const icon = document.getElementById('sound-icon');
+        const label = document.getElementById('sound-label');
+        if (state.soundEnabled) {
+          icon.textContent = '🔔';
+          label.textContent = 'Sound On';
+        } else {
+          icon.textContent = '🔇';
+          label.textContent = 'Sound Off';
+        }
+      }
+
+      /* =========================================================================
+         4. TOAST NOTIFICATIONS
+      ========================================================================= */
+      function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        const borderClass =
+          type === 'locked'
+            ? 'border-crimson/60 bg-[#180d12]/95 text-red-100'
+            : type === 'success'
+            ? 'border-gold/60 bg-[#101c1a]/95 text-amber-100'
+            : 'border-gold/40 bg-frost/95 text-slate-100';
+
+        toast.className = `pointer-events-auto rounded-2xl border px-4 py-3 shadow-2xl backdrop-blur-md text-xs sm:text-sm font-medium flex items-center gap-2.5 transition-all duration-300 translate-y-2 opacity-0 ${borderClass}`;
+        const icon = type === 'locked' ? '🔒' : type === 'success' ? '✨' : '🎄';
+        toast.innerHTML = `<span class="text-base shrink-0">${icon}</span><span>${message}</span>`;
+
+        container.appendChild(toast);
+        requestAnimationFrame(() => {
+          toast.classList.remove('translate-y-2', 'opacity-0');
+        });
+
+        setTimeout(() => {
+          toast.classList.add('translate-y-2', 'opacity-0');
+          setTimeout(() => toast.remove(), 300);
+        }, 3200);
+      }
+
+      /* =========================================================================
+         5. COUNTDOWN & ADVENT GRID + MANTLEPIECE SHELF RENDERING
+      ========================================================================= */
+      let lastKnownMaxDay = getMaxUnlockableDay(new Date());
+
+      function updateDateStatusBanner() {
+        const now = new Date();
+        const maxDay = getMaxUnlockableDay(now);
+        const preDecEl = document.getElementById('pre-december-countdown');
+        const activeDecEl = document.getElementById('active-december-status');
+
+        if (maxDay === 0) {
+          preDecEl.classList.remove('hidden');
+          activeDecEl.classList.add('hidden');
+
+          const targetDec1 = new Date(now.getFullYear(), 11, 1, 0, 0, 0, 0);
+          const diffMs = Math.max(0, targetDec1.getTime() - now.getTime());
+
+          const totalSecs = Math.floor(diffMs / 1000);
+          const days = Math.floor(totalSecs / 86400);
+          const hours = Math.floor((totalSecs % 86400) / 3600);
+          const mins = Math.floor((totalSecs % 3600) / 60);
+          const secs = totalSecs % 60;
+
+          document.getElementById('cd-days').textContent = String(days).padStart(2, '0');
+          document.getElementById('cd-hours').textContent = String(hours).padStart(2, '0');
+          document.getElementById('cd-mins').textContent = String(mins).padStart(2, '0');
+          document.getElementById('cd-secs').textContent = String(secs).padStart(2, '0');
+        } else {
+          preDecEl.classList.add('hidden');
+          activeDecEl.classList.remove('hidden');
+
+          const formattedDate = now.toLocaleDateString(undefined, {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric'
+          });
+          document.getElementById('active-date-label').textContent = formattedDate;
+
+          const summary =
+            maxDay === 24
+              ? 'All 24 Advent doors are unlocked and ready to celebrate!'
+              : maxDay === 1
+              ? 'Door 1 is unlocked today! Come back tomorrow for Door 2.'
+              : `Doors 1 through ${maxDay} are unlocked! Door ${maxDay + 1} unlocks December ${maxDay + 1}.`;
+          document.getElementById('active-unlock-summary').textContent = summary;
+        }
+
+        // Re-render doors automatically if midnight rolls over into a new December day
+        if (maxDay !== lastKnownMaxDay) {
+          lastKnownMaxDay = maxDay;
+          renderAdventCalendar();
+        }
+      }
+
+      function renderOrnamentShelf() {
+        const shelfGrid = document.getElementById('ornament-shelf-grid');
+        const counterEl = document.getElementById('ornament-counter');
+        counterEl.textContent = `${state.openedDoors.size} / 24 Collected`;
+
+        shelfGrid.innerHTML = ADVENT_DOORS.map((item) => {
+          const collected = state.openedDoors.has(item.day);
+          if (collected) {
+            return `
+              <button type="button" data-shelf-day="${item.day}" title="Day ${item.day}: ${item.ornament}" class="group aspect-square rounded-xl bg-gradient-to-b from-gold/20 to-pine/30 border border-gold/50 flex flex-col items-center justify-center p-1 hover:scale-105 transition-transform">
+                <span class="text-lg sm:text-xl leading-none">${item.icon}</span>
+                <span class="text-[9px] font-bold text-gold tabular-nums mt-1">#${item.day}</span>
+              </button>
+            `;
+          }
+          return `
+            <div title="Day ${item.day} Ornament (Uncollected)" class="aspect-square rounded-xl bg-midnight/60 border border-dashed border-white/10 flex flex-col items-center justify-center p-1 opacity-55">
+              <span class="text-xs text-slate-500 font-semibold tabular-nums">${item.day}</span>
+            </div>
+          `;
+        }).join('');
+
+        shelfGrid.querySelectorAll('[data-shelf-day]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const day = Number(btn.getAttribute('data-shelf-day'));
+            openDoorModal(day);
+          });
+        });
+      }
+
+      function renderAdventCalendar() {
+        const grid = document.getElementById('advent-grid');
+        const now = new Date();
+        const maxDay = getMaxUnlockableDay(now);
+        const isDecember = now.getMonth() === 11;
+        const todayDate = isDecember ? now.getDate() : -1;
+
+        grid.innerHTML = ADVENT_DOORS.map((item) => {
+          const unlocked = item.day <= maxDay;
+          const opened = state.openedDoors.has(item.day);
+          const isToday = unlocked && item.day === todayDate;
+
+          let statusBadge = '';
+          let centerVisual = '';
+          let footerText = '';
+
+          if (!unlocked) {
+            statusBadge = `<span class="text-[11px] font-medium text-slate-400">Dec ${item.day}</span>`;
+            centerVisual = `<span class="text-2xl sm:text-3xl opacity-75">🔒</span>`;
+            footerText = `<span class="text-[11px] text-slate-500">Locked</span>`;
+          } else if (opened) {
+            statusBadge = `<span class="text-[11px] font-semibold text-emerald-300">Collected</span>`;
+            centerVisual = `<span class="text-3xl sm:text-4xl">${item.icon}</span>`;
+            footerText = `<span class="text-[11px] text-gold font-medium truncate max-w-full px-1">${item.ornament}</span>`;
+          } else {
+            statusBadge = isToday
+              ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-gold text-midnight">Today</span>`
+              : `<span class="text-[11px] font-semibold text-gold">Ready</span>`;
+            centerVisual = `<span class="text-3xl sm:text-4xl">🎁</span>`;
+            footerText = `<span class="text-[11px] text-amber-200 font-medium">Tap to Open</span>`;
+          }
+
+          return `
+            <button
+              type="button"
+              data-door-day="${item.day}"
+              aria-label="Advent Door ${item.day}${unlocked ? (opened ? ', opened' : ', unlocked') : ', locked until December ' + item.day}"
+              class="advent-door ${unlocked ? 'unlocked cursor-pointer' : 'locked cursor-not-allowed opacity-80'} ${opened ? 'opened' : 'glass-panel-subtle'} ${isToday && !opened ? 'today-highlight' : ''} relative rounded-2xl p-4 min-h-[138px] sm:min-h-[152px] flex flex-col items-center justify-between text-center border border-white/10"
+            >
+              <div class="w-full flex items-center justify-between">
+                <span class="font-serif text-lg sm:text-xl font-bold tabular-nums ${unlocked ? 'text-white' : 'text-slate-400'}">${item.day}</span>
+                ${statusBadge}
+              </div>
+              <div class="my-1">${centerVisual}</div>
+              <div class="w-full truncate">${footerText}</div>
+            </button>
+          `;
+        }).join('');
+
+        grid.querySelectorAll('[data-door-day]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const day = Number(btn.getAttribute('data-door-day'));
+            handleDoorClick(day, btn);
+          });
+        });
+      }
+
+      function handleDoorClick(day, buttonEl) {
+        if (!isDoorUnlocked(day, new Date())) {
+          playFestiveChime('locked');
+          buttonEl.classList.remove('animate-rattle');
+          void buttonEl.offsetWidth; // trigger reflow to restart animation
+          buttonEl.classList.add('animate-rattle');
+          showToast(`No peeking! Door ${day} unlocks on December ${day}.`, 'locked');
+          return;
+        }
+
+        const isFirstOpen = !state.openedDoors.has(day);
+        if (isFirstOpen) {
+          state.openedDoors.add(day);
+          saveOpenedDoors();
+          renderAdventCalendar();
+          renderOrnamentShelf();
+        }
+
+        playFestiveChime('open');
+        openDoorModal(day, isFirstOpen);
+      }
+
+      /* =========================================================================
+         6. ADVENT DOOR MODAL
+      ========================================================================= */
+      function openDoorModal(day, newlyCollected = false) {
+        const entry = ADVENT_DOORS.find((d) => d.day === day);
+        if (!entry) return;
+
+        state.activeModalDay = day;
+        document.getElementById('modal-ornament-badge').textContent = entry.icon;
+        document.getElementById('modal-day-label').textContent = `December ${entry.day}`;
+        document.getElementById('modal-door-title').textContent = entry.title;
+        document.getElementById('modal-lore-text').textContent = entry.lore;
+        document.getElementById('modal-challenge-text').textContent = entry.challenge;
+        document.getElementById('modal-ornament-name').textContent = newlyCollected
+          ? `New Ornament Earned: ${entry.ornament}!`
+          : `Ornament in Collection: ${entry.ornament}`;
+
+        const feedbackEl = document.getElementById('modal-charm-feedback');
+        feedbackEl.classList.add('hidden');
+        feedbackEl.textContent = entry.charmNote;
+
+        const modal = document.getElementById('door-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+
+      function closeDoorModal() {
+        const modal = document.getElementById('door-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        state.activeModalDay = null;
+      }
+
+      /* =========================================================================
+         7. MINIGAME 1: GIFT CATCHER (CANVAS ARCADE)
+      ========================================================================= */
+      function initGiftCatcher() {
+        const wrapper = document.getElementById('catcher-canvas-wrapper');
+        const canvas = document.getElementById('catcher-canvas');
+        const ctx = canvas.getContext('2d');
+        const overlay = document.getElementById('catcher-overlay');
+        const overlayMsg = document.getElementById('catcher-overlay-msg');
+        const overlayBtn = document.getElementById('catcher-overlay-btn');
+        const startBtn = document.getElementById('catcher-start-btn');
+        const scoreEl = document.getElementById('catcher-score');
+        const livesEl = document.getElementById('catcher-lives');
+        const levelEl = document.getElementById('catcher-level');
+        const bestEl = document.getElementById('catcher-best');
+
+        bestEl.textContent = state.highScores.catcher;
+
+        let width = 600;
+        let height = 380;
+        let running = false;
+        let animId = null;
+        let score = 0;
+        let lives = 3;
+        let spawnTimer = 0;
+        let items = [];
+        const keys = { left: false, right: false };
+
+        const sleigh = {
+          x: 300,
+          y: 330,
+          w: 78,
+          h: 28
+        };
+
+        function resizeCanvas() {
+          const rect = wrapper.getBoundingClientRect();
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          width = Math.max(280, rect.width);
+          height = Math.max(300, rect.height);
+          canvas.width = width * dpr;
+          canvas.height = height * dpr;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          sleigh.y = height - 42;
+          sleigh.x = Math.min(Math.max(sleigh.w / 2, sleigh.x), width - sleigh.w / 2);
+          if (!running) drawFrame();
+        }
+
+        function resetGame() {
+          score = 0;
+          lives = 3;
+          items = [];
+          spawnTimer = 0;
+          sleigh.x = width / 2;
+          updateHUD();
+          overlay.classList.add('hidden');
+          running = true;
+          if (animId) cancelAnimationFrame(animId);
+          lastTimestamp = performance.now();
+          animId = requestAnimationFrame(loop);
+        }
+
+        function updateHUD() {
+          scoreEl.textContent = score;
+          livesEl.textContent = '❤️'.repeat(Math.max(0, lives)) + '🖤'.repeat(Math.max(0, 3 - lives));
+          const mult = (1 + Math.floor(score / 100) * 0.2).toFixed(1);
+          levelEl.textContent = `${mult}x`;
+          if (score > state.highScores.catcher) {
+            state.highScores.catcher = score;
+            bestEl.textContent = score;
+            saveHighScores();
+          }
+        }
+
+        function spawnItem() {
+          const roll = Math.random();
+          let kind = 'gift';
+          let emoji = '🎁';
+          let points = 10;
+          if (roll > 0.78) {
+            kind = 'coal';
+            emoji = '🪨';
+            points = 0;
+          } else if (roll > 0.58) {
+            kind = 'candy';
+            emoji = '🍬';
+            points = 25;
+          }
+          const margin = 28;
+          items.push({
+            x: margin + Math.random() * (width - margin * 2),
+            y: -24,
+            vy: (155 + Math.random() * 75) * (1 + Math.floor(score / 100) * 0.15),
+            kind,
+            emoji,
+            points
+          });
+        }
+
+        function endGame() {
+          running = false;
+          if (animId) cancelAnimationFrame(animId);
+          overlayMsg.textContent = `Sleigh run complete! Final Score: ${score} (Best: ${state.highScores.catcher}).`;
+          overlayBtn.textContent = 'Fly Again';
+          overlay.classList.remove('hidden');
+        }
+
+        function drawFrame() {
+          ctx.clearRect(0, 0, width, height);
+
+          // Snowbank ground
+          ctx.fillStyle = '#e2e8f0';
+          ctx.beginPath();
+          ctx.roundRect(0, height - 16, width, 16, [8, 8, 0, 0]);
+          ctx.fill();
+
+          // Draw Sleigh
+          ctx.save();
+          ctx.translate(sleigh.x, sleigh.y);
+          // Gold runners
+          ctx.strokeStyle = '#e7c578';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(-sleigh.w / 2 - 4, 14);
+          ctx.lineTo(sleigh.w / 2 + 4, 14);
+          ctx.quadraticCurveTo(sleigh.w / 2 + 12, 14, sleigh.w / 2 + 10, 6);
+          ctx.stroke();
+
+          // Crimson sleigh body
+          ctx.fillStyle = '#c4362c';
+          ctx.beginPath();
+          ctx.roundRect(-sleigh.w / 2, -10, sleigh.w, 22, 8);
+          ctx.fill();
+          ctx.strokeStyle = '#e7c578';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          ctx.font = '20px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('🎅', 0, -14);
+          ctx.restore();
+
+          // Draw falling items
+          ctx.font = '26px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          items.forEach((it) => {
+            ctx.fillText(it.emoji, it.x, it.y);
+          });
+        }
+
+        let lastTimestamp = 0;
+        function loop(ts) {
+          if (!running) return;
+          const dt = Math.min(0.05, (ts - lastTimestamp) / 1000);
+          lastTimestamp = ts;
+
+          const moveSpeed = 430;
+          if (keys.left) sleigh.x -= moveSpeed * dt;
+          if (keys.right) sleigh.x += moveSpeed * dt;
+          sleigh.x = Math.min(Math.max(sleigh.w / 2 + 6, sleigh.x), width - sleigh.w / 2 - 6);
+
+          spawnTimer -= dt;
+          if (spawnTimer <= 0) {
+            spawnItem();
+            spawnTimer = Math.max(0.32, 0.85 - Math.floor(score / 100) * 0.06);
+          }
+
+          for (let i = items.length - 1; i >= 0; i--) {
+            const it = items[i];
+            it.y += it.vy * dt;
+
+            // Check sleigh catch collision
+            const hitX = Math.abs(it.x - sleigh.x) < sleigh.w / 2 + 16;
+            const hitY = Math.abs(it.y - sleigh.y) < 24;
+            if (hitX && hitY) {
+              if (it.kind === 'coal') {
+                lives -= 1;
+                playFestiveChime('coal');
+              } else {
+                score += it.points;
+                playFestiveChime('catch');
+              }
+              items.splice(i, 1);
+              updateHUD();
+              if (lives <= 0) {
+                drawFrame();
+                endGame();
+                return;
+              }
+              continue;
+            }
+
+            // Missed item hitting ground
+            if (it.y > height - 18) {
+              if (it.kind !== 'coal') {
+                lives -= 1;
+                playFestiveChime('coal');
+                updateHUD();
+                if (lives <= 0) {
+                  items.splice(i, 1);
+                  drawFrame();
+                  endGame();
+                  return;
+                }
+              }
+              items.splice(i, 1);
+            }
+          }
+
+          drawFrame();
+          animId = requestAnimationFrame(loop);
+        }
+
+        function pointerMove(clientX) {
+          const rect = canvas.getBoundingClientRect();
+          const relX = clientX - rect.left;
+          sleigh.x = Math.min(Math.max(sleigh.w / 2 + 6, relX), width - sleigh.w / 2 - 6);
+        }
+
+        canvas.addEventListener('mousemove', (e) => {
+          if (running) pointerMove(e.clientX);
+        });
+        canvas.addEventListener(
+          'touchmove',
+          (e) => {
+            if (running && e.touches[0]) {
+              pointerMove(e.touches[0].clientX);
+            }
+          },
+          { passive: true }
+        );
+        canvas.addEventListener(
+          'touchstart',
+          (e) => {
+            if (running && e.touches[0]) {
+              pointerMove(e.touches[0].clientX);
+            }
+          },
+          { passive: true }
+        );
+
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
+          if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+        });
+        window.addEventListener('keyup', (e) => {
+          if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+          if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+        });
+
+        startBtn.addEventListener('click', resetGame);
+        overlayBtn.addEventListener('click', resetGame);
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+      }
+
+      /* =========================================================================
+         8. MINIGAME 2: FESTIVE MEMORY MATCH (4x4)
+      ========================================================================= */
+      function initMemoryMatch() {
+        const gridEl = document.getElementById('memory-grid');
+        const movesEl = document.getElementById('memory-moves');
+        const pairsEl = document.getElementById('memory-pairs');
+        const timerEl = document.getElementById('memory-timer');
+        const bestEl = document.getElementById('memory-best');
+        const resetBtn = document.getElementById('memory-reset-btn');
+
+        const SYMBOLS = ['🎅', '🦌', '🎄', '⛄', '🎁', '🔔', '🍪', '⭐'];
+        let cards = [];
+        let flippedIndices = [];
+        let matchedCount = 0;
+        let moves = 0;
+        let seconds = 0;
+        let timerInterval = null;
+        let lockBoard = false;
+
+        if (state.highScores.memory !== null) {
+          bestEl.textContent = `${state.highScores.memory} moves`;
+        }
+
+        function formatTime(sec) {
+          const m = Math.floor(sec / 60);
+          const s = sec % 60;
+          return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function setupBoard() {
+          clearInterval(timerInterval);
+          timerInterval = null;
+          seconds = 0;
+          moves = 0;
+          matchedCount = 0;
+          flippedIndices = [];
+          lockBoard = false;
+
+          movesEl.textContent = '0';
+          pairsEl.textContent = '0 / 8';
+          timerEl.textContent = '00:00';
+
+          const deck = [...SYMBOLS, ...SYMBOLS];
+          for (let i = deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [deck[i], deck[j]] = [deck[j], deck[i]];
+          }
+
+          cards = deck.map((symbol, idx) => ({
+            id: idx,
+            symbol,
+            flipped: false,
+            matched: false
+          }));
+
+          renderCards();
+        }
+
+        function renderCards() {
+          gridEl.innerHTML = cards
+            .map(
+              (c) => `
+              <button
+                type="button"
+                data-card-id="${c.id}"
+                aria-label="Memory card ${c.id + 1}"
+                class="memory-card ${c.flipped ? 'flipped' : ''} ${c.matched ? 'matched' : ''} aspect-square rounded-2xl focus:outline-none"
+              >
+                <div class="memory-card-inner relative w-full h-full">
+                  <div class="memory-face absolute inset-0 rounded-2xl bg-gradient-to-br from-crimson/80 to-red-950 border border-gold/40 flex items-center justify-center shadow-md hover:border-gold">
+                    <span class="text-gold/80 text-xl sm:text-2xl">❄️</span>
+                  </div>
+                  <div class="memory-face memory-back absolute inset-0 rounded-2xl ${c.matched ? 'bg-pine/60 border-emerald-400/60' : 'bg-frost border-gold/60'} border flex items-center justify-center">
+                    <span class="text-3xl sm:text-4xl">${c.symbol}</span>
+                  </div>
+                </div>
+              </button>
+            `
+            )
+            .join('');
+
+          gridEl.querySelectorAll('[data-card-id]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              const id = Number(btn.getAttribute('data-card-id'));
+              handleCardFlip(id);
+            });
+          });
+        }
+
+        function handleCardFlip(id) {
+          if (lockBoard) return;
+          const card = cards[id];
+          if (!card || card.flipped || card.matched) return;
+
+          if (!timerInterval) {
+            timerInterval = setInterval(() => {
+              seconds += 1;
+              timerEl.textContent = formatTime(seconds);
+            }, 1000);
+          }
+
+          card.flipped = true;
+          flippedIndices.push(id);
+          renderCards();
+
+          if (flippedIndices.length === 2) {
+            moves += 1;
+            movesEl.textContent = moves;
+            const [firstId, secondId] = flippedIndices;
+            const first = cards[firstId];
+            const second = cards[secondId];
+
+            if (first.symbol === second.symbol) {
+              first.matched = true;
+              second.matched = true;
+              matchedCount += 1;
+              pairsEl.textContent = `${matchedCount} / 8`;
+              flippedIndices = [];
+              playFestiveChime('match');
+              renderCards();
+
+              if (matchedCount === 8) {
+                clearInterval(timerInterval);
+                if (state.highScores.memory === null || moves < state.highScores.memory) {
+                  state.highScores.memory = moves;
+                  bestEl.textContent = `${moves} moves`;
+                  saveHighScores();
+                }
+                showToast(`All 8 festive pairs matched in ${moves} moves!`, 'success');
+              }
+            } else {
+              lockBoard = true;
+              setTimeout(() => {
+                first.flipped = false;
+                second.flipped = false;
+                flippedIndices = [];
+                lockBoard = false;
+                renderCards();
+              }, 700);
+            }
+          }
+        }
+
+        resetBtn.addEventListener('click', setupBoard);
+        setupBoard();
+      }
+
+      /* =========================================================================
+         9. MINIGAME 3: CAROL SIMON SAYS (WEB AUDIO API)
+      ========================================================================= */
+      function initCarolSimon() {
+        const startBtn = document.getElementById('simon-start-btn');
+        const roundEl = document.getElementById('simon-round');
+        const statusEl = document.getElementById('simon-status');
+        const bestEl = document.getElementById('simon-best');
+        const pads = Array.from(document.querySelectorAll('.simon-pad'));
+
+        // Jingle Bells motif frequencies (E4, G4, C5, D5)
+        const PAD_NOTES = [329.63, 392.0, 523.25, 587.33];
+        const ACTIVE_STYLES = [
+          ['bg-red-500', 'border-white', 'scale-105', 'shadow-lg', 'shadow-red-500/50'],
+          ['bg-emerald-500', 'border-white', 'scale-105', 'shadow-lg', 'shadow-emerald-500/50'],
+          ['bg-amber-400', 'border-white', 'scale-105', 'shadow-lg', 'shadow-amber-400/50'],
+          ['bg-sky-400', 'border-white', 'scale-105', 'shadow-lg', 'shadow-sky-400/50']
+        ];
+
+        bestEl.textContent = state.highScores.simon;
+
+        let sequence = [];
+        let playerIndex = 0;
+        let acceptingInput = false;
+
+        function playPadTone(padIndex) {
+          // Always play Simon notes regardless of ambient mute toggle if user explicitly clicks Simon
+          const ctx = ensureAudioContext();
+          if (!ctx) return;
+          try {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(PAD_NOTES[padIndex], ctx.currentTime);
+            gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.16, ctx.currentTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.34);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.36);
+          } catch (err) {}
+        }
+
+        function flashPad(padIndex, duration = 360) {
+          const pad = pads[padIndex];
+          if (!pad) return;
+          playPadTone(padIndex);
+          pad.classList.add(...ACTIVE_STYLES[padIndex]);
+          setTimeout(() => {
+            pad.classList.remove(...ACTIVE_STYLES[padIndex]);
+          }, duration);
+        }
+
+        function nextRound() {
+          acceptingInput = false;
+          playerIndex = 0;
+          sequence.push(Math.floor(Math.random() * 4));
+          roundEl.textContent = sequence.length;
+          statusEl.textContent = 'Listen closely...';
+
+          sequence.forEach((padIdx, step) => {
+            setTimeout(() => {
+              flashPad(padIdx, 340);
+              if (step === sequence.length - 1) {
+                setTimeout(() => {
+                  acceptingInput = true;
+                  statusEl.textContent = 'Your turn! Repeat the chimes.';
+                }, 420);
+              }
+            }, 550 + step * 560);
+          });
+        }
+
+        function startGame() {
+          sequence = [];
+          nextRound();
+        }
+
+        pads.forEach((pad) => {
+          pad.addEventListener('click', () => {
+            const idx = Number(pad.getAttribute('data-pad'));
+            if (!acceptingInput) return;
+
+            flashPad(idx, 240);
+            if (idx === sequence[playerIndex]) {
+              playerIndex += 1;
+              if (playerIndex === sequence.length) {
+                acceptingInput = false;
+                const clearedRound = sequence.length;
+                if (clearedRound > state.highScores.simon) {
+                  state.highScores.simon = clearedRound;
+                  bestEl.textContent = clearedRound;
+                  saveHighScores();
+                }
+                statusEl.textContent = 'Spot on! Next verse coming up...';
+                setTimeout(nextRound, 800);
+              }
+            } else {
+              acceptingInput = false;
+              statusEl.textContent = `Oops! Wrong bell on Round ${sequence.length}. Press Start Melody to try again.`;
+              playFestiveChime('coal');
+            }
+          });
+        });
+
+        startBtn.addEventListener('click', startGame);
+      }
+
+      /* =========================================================================
+         10. MINIGAME 4: HOLIDAY WORD & TRIVIA SPRINT
+      ========================================================================= */
+      function initHolidayTrivia() {
+        const startBtn = document.getElementById('trivia-start-btn');
+        const centerStartBtn = document.getElementById('trivia-center-start');
+        const idleView = document.getElementById('trivia-idle-view');
+        const activeView = document.getElementById('trivia-active-view');
+        const badgeEl = document.getElementById('trivia-badge');
+        const promptEl = document.getElementById('trivia-prompt');
+        const scrambleBox = document.getElementById('trivia-scramble-box');
+        const scrambledWordEl = document.getElementById('trivia-scrambled-word');
+        const scrambleHintEl = document.getElementById('trivia-scramble-hint');
+        const optionsEl = document.getElementById('trivia-options');
+
+        const scoreEl = document.getElementById('trivia-score');
+        const streakEl = document.getElementById('trivia-streak');
+        const timeEl = document.getElementById('trivia-time');
+        const bestEl = document.getElementById('trivia-best');
+
+        bestEl.textContent = state.highScores.trivia;
+
+        const QUESTIONS = [
+          { type: 'trivia', prompt: 'Which reindeer’s name starts with the letter "C" and shares a name with a celestial visitor?', options: ['Comet', 'Cupid', 'Cosmo', 'Clarice'], answer: 'Comet' },
+          { type: 'scramble', prompt: 'Unscramble this festive holiday plant:', scrambled: 'ELMISTTOE', hint: 'Traditionally hung in a doorway', options: ['MISTLETOE', 'POINSETTIA', 'HOLLYBUSH', 'EVERGREEN'], answer: 'MISTLETOE' },
+          { type: 'trivia', prompt: 'In the song "The Twelve Days of Christmas," what is given on the fifth day?', options: ['Five Golden Rings', 'Five Calling Birds', 'Five French Hens', 'Five Turtle Doves'], answer: 'Five Golden Rings' },
+          { type: 'scramble', prompt: 'Unscramble this sweet North Pole treat:', scrambled: 'BREDGINGREA', hint: 'Used to build frosted cottages', options: ['GINGERBREAD', 'PEPPERMINT', 'SHORTBREAD', 'SUGARPLUM'], answer: 'GINGERBREAD' },
+          { type: 'trivia', prompt: 'What beverage is famously known as "milk punch" during the winter holidays?', options: ['Eggnog', 'Wassail', 'Hot Toddy', 'Mulled Cider'], answer: 'Eggnog' },
+          { type: 'scramble', prompt: 'Unscramble this snowy winter visitor:', scrambled: 'MANSNOW', hint: 'Carrot nose and coal buttons', options: ['SNOWMAN', 'REINDEER', 'NUTCRACKER', 'PENGUIN'], answer: 'SNOWMAN' },
+          { type: 'trivia', prompt: 'Which country is credited with starting the tradition of putting up a decorated Christmas tree?', options: ['Germany', 'Norway', 'Switzerland', 'Austria'], answer: 'Germany' },
+          { type: 'scramble', prompt: 'Unscramble this sparkling sky phenomenon:', scrambled: 'ROAUAR', hint: 'Northern Lights over Santa’s village', options: ['AURORA', 'METEOR', 'ZODIAC', 'NEBULA'], answer: 'AURORA' },
+          { type: 'trivia', prompt: 'How many total reindeer pull Santa’s sleigh when Rudolph leads the team?', options: ['9', '8', '10', '12'], answer: '9' },
+          { type: 'scramble', prompt: 'Unscramble this classic ballet character:', scrambled: 'KCRANUTERC', hint: 'Prince who battles the Mouse King', options: ['NUTCRACKER', 'SUGARPLUM', 'CANDYMAN', 'TOYMAKER'], answer: 'NUTCRACKER' },
+          { type: 'trivia', prompt: 'What traditional spiced apple or cider drink is enjoyed while caroling?', options: ['Wassail', 'Horchata', 'Kombucha', 'Kvass'], answer: 'Wassail' },
+          { type: 'scramble', prompt: 'Unscramble this winter sleigh accessory:', scrambled: 'SLLEB', hint: 'They jingle all the way', options: ['BELLS', 'REINS', 'BOOTS', 'STARS'], answer: 'BELLS' }
+        ];
+
+        let pool = [];
+        let currentQ = null;
+        let score = 0;
+        let streak = 0;
+        let timeLeft = 45;
+        let timer = null;
+
+        function refillPool() {
+          pool = [...QUESTIONS];
+          for (let i = pool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [pool[i], pool[j]] = [pool[j], pool[i]];
+          }
+        }
+
+        function renderNextQuestion() {
+          if (pool.length === 0) refillPool();
+          currentQ = pool.pop();
+
+          if (currentQ.type === 'scramble') {
+            badgeEl.textContent = 'Word Scramble';
+            promptEl.textContent = currentQ.prompt;
+            scrambleBox.classList.remove('hidden');
+            scrambledWordEl.textContent = currentQ.scrambled;
+            scrambleHintEl.textContent = `Hint: ${currentQ.hint}`;
+          } else {
+            badgeEl.textContent = 'Festive Trivia';
+            promptEl.textContent = currentQ.prompt;
+            scrambleBox.classList.add('hidden');
+          }
+
+          const shuffledOptions = [...currentQ.options].sort(() => Math.random() - 0.5);
+          optionsEl.innerHTML = shuffledOptions
+            .map(
+              (opt) => `
+              <button type="button" data-answer="${opt}" class="trivia-opt-btn w-full px-4 py-3 rounded-xl bg-frost hover:bg-gold/20 border border-white/15 hover:border-gold/60 text-sm font-medium text-white transition-all">
+                ${opt}
+              </button>
+            `
+            )
+            .join('');
+
+          optionsEl.querySelectorAll('.trivia-opt-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              const chosen = btn.getAttribute('data-answer');
+              handleAnswer(chosen, btn);
+            });
+          });
+        }
+
+        function handleAnswer(chosen, btnEl) {
+          if (!timer) return;
+          const allBtns = optionsEl.querySelectorAll('.trivia-opt-btn');
+          allBtns.forEach((b) => (b.disabled = true));
+
+          if (chosen === currentQ.answer) {
+            streak += 1;
+            const gained = 10 * Math.min(4, streak);
+            score += gained;
+            btnEl.classList.add('!bg-emerald-600/60', '!border-emerald-300');
+            playFestiveChime('catch');
+          } else {
+            streak = 0;
+            btnEl.classList.add('!bg-crimson/70', '!border-red-300');
+            allBtns.forEach((b) => {
+              if (b.getAttribute('data-answer') === currentQ.answer) {
+                b.classList.add('!bg-emerald-600/50', '!border-emerald-300');
+              }
+            });
+            playFestiveChime('coal');
+          }
+
+          scoreEl.textContent = score;
+          streakEl.textContent = `${Math.max(1, Math.min(4, streak))}x`;
+          if (score > state.highScores.trivia) {
+            state.highScores.trivia = score;
+            bestEl.textContent = score;
+            saveHighScores();
+          }
+
+          setTimeout(() => {
+            if (timer) renderNextQuestion();
+          }, 520);
+        }
+
+        function startSprint() {
+          clearInterval(timer);
+          score = 0;
+          streak = 0;
+          timeLeft = 45;
+          scoreEl.textContent = '0';
+          streakEl.textContent = '1x';
+          timeEl.textContent = '45s';
+
+          idleView.classList.add('hidden');
+          activeView.classList.remove('hidden');
+          refillPool();
+          renderNextQuestion();
+
+          timer = setInterval(() => {
+            timeLeft -= 1;
+            timeEl.textContent = `${timeLeft}s`;
+            if (timeLeft <= 0) {
+              clearInterval(timer);
+              timer = null;
+              activeView.classList.add('hidden');
+              idleView.classList.remove('hidden');
+              idleView.querySelector('h4').textContent = `Time’s Up! Final Sprint Score: ${score}`;
+              idleView.querySelector('p').textContent = `Personal Best: ${state.highScores.trivia} points. Ready for another round?`;
+              centerStartBtn.textContent = 'Play Another Sprint';
+            }
+          }, 1000);
+        }
+
+        startBtn.addEventListener('click', startSprint);
+        centerStartBtn.addEventListener('click', startSprint);
+      }
+
+      /* =========================================================================
+         11. FALLING SNOW AMBIENT CANVAS
+      ========================================================================= */
+      function initSnowCanvas() {
+        const canvas = document.getElementById('snow-canvas');
+        const ctx = canvas.getContext('2d');
+        let w = window.innerWidth;
+        let h = window.innerHeight;
+        const flakes = [];
+
+        function resize() {
+          w = window.innerWidth;
+          h = window.innerHeight;
+          canvas.width = w;
+          canvas.height = h;
+        }
+
+        resize();
+        window.addEventListener('resize', resize);
+
+        const count = Math.min(95, Math.floor((w * h) / 16000));
+        for (let i = 0; i < count; i++) {
+          flakes.push({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            r: 1 + Math.random() * 2.4,
+            vy: 0.35 + Math.random() * 0.85,
+            vx: -0.25 + Math.random() * 0.5,
+            alpha: 0.25 + Math.random() * 0.55
+          });
+        }
+
+        function animateSnow() {
+          ctx.clearRect(0, 0, w, h);
+          flakes.forEach((f) => {
+            f.y += f.vy;
+            f.x += f.vx;
+            if (f.y > h) {
+              f.y = -5;
+              f.x = Math.random() * w;
+            }
+            if (f.x > w) f.x = 0;
+            if (f.x < 0) f.x = w;
+
+            ctx.fillStyle = `rgba(248, 250, 252, ${f.alpha})`;
+            ctx.beginPath();
+            ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          requestAnimationFrame(animateSnow);
+        }
+
+        animateSnow();
+      }
+
+      /* =========================================================================
+         12. INITIALIZATION & UI WIRING
+      ========================================================================= */
+      document.addEventListener('DOMContentLoaded', () => {
+        loadState();
+        updateSoundButtonUI();
+        updateDateStatusBanner();
+        renderOrnamentShelf();
+        renderAdventCalendar();
+
+        // Update countdown every second
+        setInterval(updateDateStatusBanner, 1000);
+
+        // Sound Toggle
+        document.getElementById('sound-toggle-btn').addEventListener('click', () => {
+          state.soundEnabled = !state.soundEnabled;
+          try {
+            localStorage.setItem(STORAGE_KEYS.SOUND_ENABLED, String(state.soundEnabled));
+          } catch (err) {}
+          updateSoundButtonUI();
+          if (state.soundEnabled) {
+            ensureAudioContext();
+            playFestiveChime('open');
+            showToast('Festive chimes enabled!', 'success');
+          }
+        });
+
+        // Reset Progress Modal
+        const resetModal = document.getElementById('reset-modal');
+        document.getElementById('reset-progress-btn').addEventListener('click', () => {
+          resetModal.classList.remove('hidden');
+          resetModal.classList.add('flex');
+        });
+        document.getElementById('reset-cancel-btn').addEventListener('click', () => {
+          resetModal.classList.add('hidden');
+          resetModal.classList.remove('flex');
+        });
+        document.getElementById('reset-confirm-btn').addEventListener('click', () => {
+          state.openedDoors.clear();
+          state.highScores = { catcher: 0, memory: null, simon: 0, trivia: 0 };
+          saveOpenedDoors();
+          saveHighScores();
+          document.getElementById('catcher-best').textContent = '0';
+          document.getElementById('memory-best').textContent = '--';
+          document.getElementById('simon-best').textContent = '0';
+          document.getElementById('trivia-best').textContent = '0';
+          renderOrnamentShelf();
+          renderAdventCalendar();
+          resetModal.classList.add('hidden');
+          resetModal.classList.remove('flex');
+          showToast('Progress and high scores have been reset.', 'info');
+        });
+
+        // Door Modal Events
+        document.getElementById('modal-close-btn').addEventListener('click', closeDoorModal);
+        document.getElementById('modal-done-btn').addEventListener('click', closeDoorModal);
+        document.getElementById('door-modal').addEventListener('click', (e) => {
+          if (e.target.id === 'door-modal') closeDoorModal();
+        });
+        document.getElementById('modal-charm-btn').addEventListener('click', () => {
+          playFestiveChime('open');
+          document.getElementById('modal-charm-feedback').classList.remove('hidden');
+        });
+
+        // Arcade Tab Switching
+        const tabBtns = document.querySelectorAll('.game-tab-btn');
+        const panels = document.querySelectorAll('.game-panel');
+        tabBtns.forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const target = btn.getAttribute('data-game-tab');
+            tabBtns.forEach((b) => {
+              b.classList.remove('bg-gold', 'text-midnight');
+              b.classList.add('glass-panel-subtle', 'text-slate-300');
+            });
+            btn.classList.add('bg-gold', 'text-midnight');
+            btn.classList.remove('glass-panel-subtle', 'text-slate-300');
+
+            panels.forEach((panel) => {
+              if (panel.id === `game-panel-${target}`) {
+                panel.classList.remove('hidden');
+              } else {
+                panel.classList.add('hidden');
+              }
+            });
+
+            if (target === 'catcher') {
+              window.dispatchEvent(new Event('resize'));
+            }
+          });
+        });
+
+        // Start Ambient Snow & All 4 Minigames
+        initSnowCanvas();
+        initGiftCatcher();
+        initMemoryMatch();
+        initCarolSimon();
+        initHolidayTrivia();
+      });
+    })();
+  </script>
+</body>
+</html>
